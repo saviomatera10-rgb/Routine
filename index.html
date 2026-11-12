@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f5f2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#151514" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Routine">
+  <title>Routine</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="top">
+      <div>
+        <p class="weekday" id="weekday"></p>
+        <h1 class="date" id="date"></h1>
+      </div>
+      <div class="top-actions">
+        <button class="pill" id="todayBtn" type="button" hidden>Oggi</button>
+        <button class="icon-btn" id="menuBtn" type="button" aria-label="Opzioni">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <nav class="week" aria-label="Giorni della settimana">
+      <button class="icon-btn small" id="prevWeek" type="button" aria-label="Settimana precedente">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      <div class="days" id="days"></div>
+      <button class="icon-btn small" id="nextWeek" type="button" aria-label="Settimana successiva">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </nav>
+
+    <section class="progress-card" aria-live="polite">
+      <div class="progress-head">
+        <span class="pct" id="pct">0%</span>
+        <span class="summary" id="summary"></span>
+      </div>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="bar">
+        <div class="bar-fill" id="barFill"></div>
+      </div>
+    </section>
+
+    <div class="reorder-bar" id="reorderBar" hidden>
+      <span>Usa le frecce per riordinare</span>
+      <button class="pill" id="reorderDone" type="button">Fine</button>
+    </div>
+
+    <section class="list" id="list"></section>
+  </main>
+
+  <button class="fab" id="addBtn" type="button" aria-label="Aggiungi attività">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <!-- Pannello: nuova / modifica attività -->
+  <dialog class="sheet" id="editSheet">
+    <form id="editForm" novalidate>
+      <div class="sheet-head">
+        <h2 id="editTitle">Nuova attività</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Chiudi">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <label class="field">
+        <span>Nome</span>
+        <input id="fName" type="text" maxlength="80" placeholder="Skincare mattutina" autocomplete="off">
+      </label>
+
+      <label class="switch-row">
+        <span>Senza orario</span>
+        <input id="fNoTime" type="checkbox" class="switch">
+      </label>
+
+      <div class="time-row" id="timeRow">
+        <label class="field">
+          <span>Inizio</span>
+          <input id="fStart" type="time">
+        </label>
+        <label class="field">
+          <span>Fine</span>
+          <input id="fEnd" type="time">
+        </label>
+      </div>
+
+      <div class="field">
+        <span>Giorni</span>
+        <div class="chips" id="fDays"></div>
+        <p class="hint" id="daysHint">Togli un giorno per rimuovere l'attività solo da quel giorno.</p>
+      </div>
+
+      <p class="error" id="editError" role="alert"></p>
+
+      <div class="sheet-actions">
+        <button class="btn danger" type="button" id="deleteBtn">Elimina</button>
+        <button class="btn primary" type="submit">Salva</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Pannello: copia giorno -->
+  <dialog class="sheet" id="copySheet">
+    <form id="copyForm">
+      <div class="sheet-head">
+        <h2 id="copyTitle">Copia routine</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Chiudi">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="field">
+        <span>Copia su</span>
+        <div class="chips" id="cDays"></div>
+      </div>
+      <label class="switch-row">
+        <span>Sostituisci le attività già presenti</span>
+        <input id="cReplace" type="checkbox" class="switch">
+      </label>
+      <p class="error" id="copyError" role="alert"></p>
+      <div class="sheet-actions">
+        <button class="btn primary wide" type="submit">Copia</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Pannello: opzioni -->
+  <dialog class="sheet" id="menuSheet">
+    <div class="sheet-head">
+      <h2>Opzioni</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Chiudi">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="menu">
+      <button type="button" class="menu-item" id="mCopy">Copia questo giorno su altri giorni</button>
+      <button type="button" class="menu-item" id="mReorder">Riordina attività</button>
+      <button type="button" class="menu-item" id="mExport">Esporta backup</button>
+      <button type="button" class="menu-item" id="mImport">Importa backup</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+    <p class="hint menu-hint">I dati sono salvati solo in questo browser. Esporta un backup ogni tanto per non perderli.</p>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
